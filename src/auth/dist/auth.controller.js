@@ -49,53 +49,34 @@ exports.AuthController = void 0;
 var common_1 = require("@nestjs/common");
 var swagger_1 = require("@nestjs/swagger");
 var AuthController = /** @class */ (function () {
-    function AuthController(authServive, httpService, configService) {
-        this.authServive = authServive;
-        this.httpService = httpService;
+    function AuthController(keycloakService, configService) {
+        this.keycloakService = keycloakService;
         this.configService = configService;
     }
+    AuthController.prototype.signup = function (signupDto) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/, this.keycloakService.signup(signupDto)];
+            });
+        });
+    };
     AuthController.prototype.login = function (loginDto) {
         return __awaiter(this, void 0, void 0, function () {
-            var headers, payload, Keycloak_realm, response, error_1;
             return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        headers = {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        };
-                        payload = new URLSearchParams({
-                            client_id: this.configService.get('KEYCLOAK_CLIENT_ID'),
-                            client_secret: this.configService.get('KEYCLOAK_CLIENT_SECRET'),
-                            scope: this.configService.get('KEYCLOAK_SCOPE'),
-                            grant_type: 'password',
-                            username: loginDto.user,
-                            password: loginDto.password
-                        });
-                        Keycloak_realm = this.configService.get('KEYCLOAK_REALM');
-                        _a.label = 1;
-                    case 1:
-                        _a.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, this.httpService.axiosRef.post("http://localhost:8080/realms/" + Keycloak_realm + "/protocol/openid-connect/token", payload.toString(), { headers: headers })];
-                    case 2:
-                        response = _a.sent();
-                        return [2 /*return*/, response.data];
-                    case 3:
-                        error_1 = _a.sent();
-                        console.error('Full error object:', error_1);
-                        if (error_1.response) {
-                            console.error('Response status:', error_1.response.status);
-                            console.error('Response headers:', error_1.response.headers);
-                            console.error('Response data:', error_1.response.data);
-                            throw new common_1.BadRequestException(error_1.response.data.error_description || 'Invalid credentials');
-                        }
-                        console.error('Request error:', error_1.message);
-                        throw new common_1.BadRequestException('Unable to process login request');
-                    case 4: return [2 /*return*/];
-                }
+                return [2 /*return*/, this.keycloakService.login(loginDto.user, loginDto.password)];
             });
         });
     };
     __decorate([
+        common_1.Post('signup'),
+        swagger_1.ApiOperation({ summary: 'User SignUp' }),
+        swagger_1.ApiResponse({ status: 200, description: 'User registerd in successfully' }),
+        __param(0, common_1.Body())
+    ], AuthController.prototype, "signup");
+    __decorate([
+        swagger_1.ApiOperation({ summary: 'User Login' }),
+        swagger_1.ApiResponse({ status: 200, description: 'User logged in successfully' }),
+        swagger_1.ApiBadRequestResponse({ description: 'Invalid credentials' }),
         common_1.Post('login'),
         __param(0, common_1.Body())
     ], AuthController.prototype, "login");
