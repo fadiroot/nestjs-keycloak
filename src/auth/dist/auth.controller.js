@@ -56,7 +56,7 @@ var AuthController = /** @class */ (function () {
     AuthController.prototype.signup = function (signupDto) {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
-                return [2 /*return*/, this.keycloakService.signup(signupDto)];
+                return [2 /*return*/, this.keycloakService.signup(signupDto.firstname, signupDto.lastname, signupDto.username, signupDto.email, signupDto.password)];
             });
         });
     };
@@ -64,6 +64,13 @@ var AuthController = /** @class */ (function () {
         return __awaiter(this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 return [2 /*return*/, this.keycloakService.login(loginDto.user, loginDto.password)];
+            });
+        });
+    };
+    AuthController.prototype.register = function (signupDto) {
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                return [2 /*return*/, this.keycloakService.registerUser(signupDto.firstname, signupDto.email, signupDto.password)];
             });
         });
     };
@@ -80,6 +87,15 @@ var AuthController = /** @class */ (function () {
         common_1.Post('login'),
         __param(0, common_1.Body())
     ], AuthController.prototype, "login");
+    __decorate([
+        common_1.Post('register'),
+        swagger_1.ApiOperation({ summary: 'User register in database' }),
+        swagger_1.ApiResponse({
+            status: 200,
+            description: 'User registerd in database in successfully'
+        }),
+        __param(0, common_1.Body())
+    ], AuthController.prototype, "register");
     AuthController = __decorate([
         swagger_1.ApiTags('auth'),
         common_1.Controller('auth')

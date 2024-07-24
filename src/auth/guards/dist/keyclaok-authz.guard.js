@@ -25,7 +25,6 @@ var KeycloakAuthGuard = /** @class */ (function () {
         var request = context.switchToHttp().getRequest();
         //get authorization
         var authorization = request.headers;
-        console.log(authorization);
         return true;
     };
     KeycloakAuthGuard = __decorate([

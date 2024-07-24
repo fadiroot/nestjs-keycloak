@@ -12,9 +12,12 @@ import {
 import { HttpModule } from '@nestjs/axios';
 import { KeycloakConfigService } from './keycloack/keycloak.config';
 import { KeycloakService } from './keycloack/keycloak.service';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './entities/auth.entity';
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([User]),
     HttpModule,
     ConfigModule.forRoot({
       isGlobal: true,
@@ -24,7 +27,7 @@ import { KeycloakService } from './keycloack/keycloak.service';
       authServerUrl: 'http://localhost:8080', // might be http://localhost:8080/auth for older keycloak versions
       realm: 'softylines',
       clientId: 'nestjs-app',
-      secret: 'Snq4KA6Zju1a17NgusIGf0jVr1OsUVGj',
+      secret: 'ypf4DWhWLZEcnwuC6IaQUTfEdg4qrwVP',
       policyEnforcement: PolicyEnforcementMode.PERMISSIVE,
       tokenValidation: TokenValidation.ONLINE,
     }),

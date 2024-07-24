@@ -1,8 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-
+import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
+import { User } from '../entities/auth.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class KeycloakService {
@@ -14,6 +16,7 @@ export class KeycloakService {
   constructor(
     private httpService: HttpService,
     private configService: ConfigService,
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {
     this.keycloakUrl = this.configService.get('KEYCLOAK_BASE_URL');
     this.realm = this.configService.get('KEYCLOAK_REALM');
@@ -21,7 +24,13 @@ export class KeycloakService {
     this.clientSecret = this.configService.get('KEYCLOAK_CLIENT_SECRET');
   }
 
-  async signup(signupDto) {
+  async signup(
+    firstName: string,
+    lastName: string,
+    username: string,
+    email: string,
+    password: string,
+  ): Promise<any> {
     try {
       // Step 1: Get admin token
       const adminToken = await this.getAdminToken();
@@ -33,15 +42,15 @@ export class KeycloakService {
         Authorization: `bearer ${adminToken}`,
       };
       const userData = {
-        username: signupDto.username,
-        email: signupDto.email,
+        username: username,
+        email: email,
         enabled: true,
-        firstName: signupDto.firstname,
-        lastName: signupDto.lastname,
+        firstName: firstName,
+        lastName: lastName,
         credentials: [
           {
             type: 'password',
-            value: signupDto.password,
+            value: password,
             temporary: false,
           },
         ],
@@ -50,8 +59,12 @@ export class KeycloakService {
       await firstValueFrom(
         this.httpService.post(userUrl, userData, { headers }),
       );
-
-      return { message: 'User registered successfully' };
+      const user: User = new User();
+      user.username = firstName;
+      user.email = email;
+      user.password = password;
+      console.log(user);
+      return { message: 'user register successfully' };
     } catch (error) {
       if (error.response) {
         // Capture and throw the status code along with the error message
@@ -60,24 +73,33 @@ export class KeycloakService {
           return { message: 'the user already exist' };
         }
       } else {
-        throw new Error(
-          'Failed to register user: An unexpected error occurred',
-        );
+        throw new Error(error);
       }
     }
+  }
+  async registerUser(
+    firstName: string,
+    email: string,
+    password: string,
+  ): Promise<any> {
+    const user: User = new User();
+    user.username = firstName;
+    user.email = email;
+    user.password = password;
+    console.log(user);
+    await this.userRepository.save(user);
+    return { message: 'user register successfully' };
   }
 
   async login(username: string, password: string) {
     try {
       // Step 1: Get access token
       const accessToken = await this.getAccessToken(username, password);
-      console.log(accessToken);
       // Step 2: Use access token to fetch user data
-      const userInfo = await this.getUserInfo(accessToken);
-      return { ...userInfo, accessToken };
+      return { accessToken };
       // Return user data or any other relevant information
     } catch (error) {
-      throw new Error('Login failed');
+      throw new Error(error);
     }
   }
 

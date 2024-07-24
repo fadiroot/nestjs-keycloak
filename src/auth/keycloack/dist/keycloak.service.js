@@ -1,20 +1,12 @@
 "use strict";
-var __assign = (this && this.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
 var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
 };
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
@@ -56,18 +48,21 @@ exports.__esModule = true;
 exports.KeycloakService = void 0;
 var common_1 = require("@nestjs/common");
 var rxjs_1 = require("rxjs");
+var typeorm_1 = require("@nestjs/typeorm");
+var auth_entity_1 = require("../entities/auth.entity");
 var KeycloakService = /** @class */ (function () {
-    function KeycloakService(httpService, configService) {
+    function KeycloakService(httpService, configService, userRepository) {
         this.httpService = httpService;
         this.configService = configService;
+        this.userRepository = userRepository;
         this.keycloakUrl = this.configService.get('KEYCLOAK_BASE_URL');
         this.realm = this.configService.get('KEYCLOAK_REALM');
         this.clientId = this.configService.get('KEYCLOAK_CLIENT_ID');
         this.clientSecret = this.configService.get('KEYCLOAK_CLIENT_SECRET');
     }
-    KeycloakService.prototype.signup = function (signupDto) {
-        return __awaiter(this, void 0, void 0, function () {
-            var adminToken, userUrl, headers, userData, error_1, status;
+    KeycloakService.prototype.signup = function (firstName, lastName, username, email, password) {
+        return __awaiter(this, void 0, Promise, function () {
+            var adminToken, userUrl, headers, userData, user, error_1, status;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -81,15 +76,15 @@ var KeycloakService = /** @class */ (function () {
                             Authorization: "bearer " + adminToken
                         };
                         userData = {
-                            username: signupDto.username,
-                            email: signupDto.email,
+                            username: username,
+                            email: email,
                             enabled: true,
-                            firstName: signupDto.firstname,
-                            lastName: signupDto.lastname,
+                            firstName: firstName,
+                            lastName: lastName,
                             credentials: [
                                 {
                                     type: 'password',
-                                    value: signupDto.password,
+                                    value: password,
                                     temporary: false
                                 },
                             ]
@@ -97,7 +92,12 @@ var KeycloakService = /** @class */ (function () {
                         return [4 /*yield*/, rxjs_1.firstValueFrom(this.httpService.post(userUrl, userData, { headers: headers }))];
                     case 2:
                         _a.sent();
-                        return [2 /*return*/, { message: 'User registered successfully' }];
+                        user = new auth_entity_1.User();
+                        user.username = firstName;
+                        user.email = email;
+                        user.password = password;
+                        console.log(user);
+                        return [2 /*return*/, { message: 'user register successfully' }];
                     case 3:
                         error_1 = _a.sent();
                         if (error_1.response) {
@@ -107,7 +107,7 @@ var KeycloakService = /** @class */ (function () {
                             }
                         }
                         else {
-                            throw new Error('Failed to register user: An unexpected error occurred');
+                            throw new Error(error_1);
                         }
                         return [3 /*break*/, 4];
                     case 4: return [2 /*return*/];
@@ -115,25 +115,41 @@ var KeycloakService = /** @class */ (function () {
             });
         });
     };
-    KeycloakService.prototype.login = function (username, password) {
-        return __awaiter(this, void 0, void 0, function () {
-            var accessToken, userInfo, error_2;
+    KeycloakService.prototype.registerUser = function (firstName, email, password) {
+        return __awaiter(this, void 0, Promise, function () {
+            var user;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 3, , 4]);
+                        user = new auth_entity_1.User();
+                        user.username = firstName;
+                        user.email = email;
+                        user.password = password;
+                        console.log(user);
+                        return [4 /*yield*/, this.userRepository.save(user)];
+                    case 1:
+                        _a.sent();
+                        return [2 /*return*/, { message: 'user register successfully' }];
+                }
+            });
+        });
+    };
+    KeycloakService.prototype.login = function (username, password) {
+        return __awaiter(this, void 0, void 0, function () {
+            var accessToken, error_2;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
                         return [4 /*yield*/, this.getAccessToken(username, password)];
                     case 1:
                         accessToken = _a.sent();
-                        console.log(accessToken);
-                        return [4 /*yield*/, this.getUserInfo(accessToken)];
+                        // Step 2: Use access token to fetch user data
+                        return [2 /*return*/, { accessToken: accessToken }];
                     case 2:
-                        userInfo = _a.sent();
-                        return [2 /*return*/, __assign(__assign({}, userInfo), { accessToken: accessToken })];
-                    case 3:
                         error_2 = _a.sent();
-                        throw new Error('Login failed');
-                    case 4: return [2 /*return*/];
+                        throw new Error(error_2);
+                    case 3: return [2 /*return*/];
                 }
             });
         });
@@ -219,7 +235,8 @@ var KeycloakService = /** @class */ (function () {
         });
     };
     KeycloakService = __decorate([
-        common_1.Injectable()
+        common_1.Injectable(),
+        __param(2, typeorm_1.InjectRepository(auth_entity_1.User))
     ], KeycloakService);
     return KeycloakService;
 }());

@@ -19,7 +19,6 @@ export class KeycloakAuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     //get authorization
     const authorization = request.headers;
-    console.log(authorization);
     return true;
   }
 }
