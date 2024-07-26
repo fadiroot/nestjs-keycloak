@@ -50,6 +50,7 @@ var common_1 = require("@nestjs/common");
 var rxjs_1 = require("rxjs");
 var typeorm_1 = require("@nestjs/typeorm");
 var auth_entity_1 = require("../entities/auth.entity");
+var common_2 = require("@nestjs/common");
 var KeycloakService = /** @class */ (function () {
     function KeycloakService(httpService, configService, userRepository) {
         this.httpService = httpService;
@@ -62,7 +63,7 @@ var KeycloakService = /** @class */ (function () {
     }
     KeycloakService.prototype.signup = function (firstName, lastName, username, email, password) {
         return __awaiter(this, void 0, Promise, function () {
-            var adminToken, userUrl, headers, userData, user, error_1, status;
+            var adminToken, userUrl, headers, userData, res, user, error_1, status;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
@@ -91,26 +92,27 @@ var KeycloakService = /** @class */ (function () {
                         };
                         return [4 /*yield*/, rxjs_1.firstValueFrom(this.httpService.post(userUrl, userData, { headers: headers }))];
                     case 2:
-                        _a.sent();
+                        res = _a.sent();
+                        console.log('resonse is : ', res);
                         user = new auth_entity_1.User();
                         user.username = firstName;
                         user.email = email;
                         user.password = password;
-                        console.log(user);
-                        return [2 /*return*/, { message: 'user register successfully' }];
+                        return [3 /*break*/, 4];
                     case 3:
                         error_1 = _a.sent();
                         if (error_1.response) {
                             status = error_1.response.status;
                             if (status === 409) {
-                                return [2 /*return*/, { message: 'the user already exist' }];
+                                throw new common_2.HttpException('The user already exists', common_2.HttpStatus.CONFLICT);
                             }
                         }
                         else {
+                            return [2 /*return*/, { message: 'somthing wrong' }];
                             throw new Error(error_1);
                         }
                         return [3 /*break*/, 4];
-                    case 4: return [2 /*return*/];
+                    case 4: return [2 /*return*/, { message: 'user register successfully' }];
                 }
             });
         });

@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 import { User } from '../entities/auth.entity';
 import { Repository } from 'typeorm';
+import { HttpException, HttpStatus } from '@nestjs/common';
 
 @Injectable()
 export class KeycloakService {
@@ -56,26 +57,32 @@ export class KeycloakService {
         ],
       };
 
-      await firstValueFrom(
+      const res = await firstValueFrom(
         this.httpService.post(userUrl, userData, { headers }),
       );
+
+      console.log('resonse is : ', res);
       const user: User = new User();
       user.username = firstName;
       user.email = email;
       user.password = password;
-      console.log(user);
-      return { message: 'user register successfully' };
     } catch (error) {
       if (error.response) {
         // Capture and throw the status code along with the error message
         const { status } = error.response;
         if (status === 409) {
-          return { message: 'the user already exist' };
+          throw new HttpException(
+            'The user already exists',
+            HttpStatus.CONFLICT,
+          );
         }
       } else {
+        return { message: 'somthing wrong' };
+
         throw new Error(error);
       }
     }
+    return { message: 'user register successfully' };
   }
   async registerUser(
     firstName: string,
