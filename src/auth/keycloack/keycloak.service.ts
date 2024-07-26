@@ -60,7 +60,6 @@ export class KeycloakService {
       const res = await firstValueFrom(
         this.httpService.post(userUrl, userData, { headers }),
       );
-
       console.log('resonse is : ', res);
       const user: User = new User();
       user.username = firstName;
